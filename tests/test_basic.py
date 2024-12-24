@@ -2,9 +2,10 @@
 import pytest
 from unittest import mock
 import mouse_anywhere
+import ctypes
 
 # Mock the ctypes.CDLL to prevent actual DLL loading during tests
-@mock.patch('mouse_anywhere.mouse_anywhere.CDLL')
+@mock.patch('ctypes.CDLL')
 def test_package_import(mock_cdll):
     # Simulate successful DLL loading
     mock_cdll.return_value = mock.Mock()
@@ -12,8 +13,10 @@ def test_package_import(mock_cdll):
     assert mouse_anywhere is not None
 
 def test_initialize_shutdown():
-    with mock.patch('mouse_anywhere.mouse_anywhere.mouse_anywhere_dll.initialize') as mock_init, \
+    with mock.patch('ctypes.CDLL') as mock_cdll, \
+         mock.patch('mouse_anywhere.mouse_anywhere.mouse_anywhere_dll.initialize') as mock_init, \
          mock.patch('mouse_anywhere.mouse_anywhere.mouse_anywhere_dll.mouse_shutdown') as mock_shutdown:
+        mock_cdll.return_value = mock.Mock()
         mouse_anywhere.initialize()
         mock_init.assert_called_once()
 
