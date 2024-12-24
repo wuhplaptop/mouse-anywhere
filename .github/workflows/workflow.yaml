@@ -71,15 +71,19 @@ jobs:
 
     - name: Run tests
       run: |
+        # List build artifacts for debugging
+        dir dist\
+        
         # Install the built package
-        pip install dist\*.whl
+        pip install dist\*.whl || exit 1
 
         # Install testing dependencies
         pip install pytest
 
         # Run tests
         pytest tests/
-  
+      shell: cmd
+
   publish:
     needs: build
     runs-on: windows-latest
