@@ -1,4 +1,3 @@
-
 # Mouse Anywhere
 
 [![PyPI Version](https://img.shields.io/pypi/v/mouse-anywhere.svg)](https://pypi.org/project/mouse-anywhere/)
@@ -74,10 +73,10 @@ pip install mouse-anywhere
 ```
 
 **Requirements:**
-- Windows 10 or later.
-- Python 3.6 or higher.
 
-**Note:** Mouse Anywhere is **Windows-only** due to platform-specific dependencies.
+- Windows OS
+- Python 3.x
+- The `mouse-anywhere.dll` file must be in the same directory as your Python script.
 
 ---
 
@@ -86,23 +85,19 @@ pip install mouse-anywhere
 Here's a quick example to get you started:
 
 ```python
-from mouse_anywhere import MouseAnywhere, EASE_SINUSOIDAL
-import time
+from mouse_anywhere import initialize, shutdown, set_cursor_abs, set_cursor_rel
 
 # Initialize the DLL
-with MouseAnywhere() as mouse:
-    # Move cursor to absolute position (1000, 800)
-    mouse.set_cursor_abs(1000, 800)
+initialize()
 
-    # Move cursor relatively by (-50, 50)
-    mouse.set_cursor_rel(-50, 50)
+# Move cursor to an absolute position (100, 200)
+set_cursor_abs(100, 200)
 
-    # Enqueue multiple targets
-    mouse.enqueue_target_abs(800, 600)
-    mouse.enqueue_target_rel(100, 100)
+# Move cursor relatively by (50, -25)
+set_cursor_rel(50, -25)
 
-    # Allow some time for the movements
-    time.sleep(5)
+# Shutdown the DLL
+shutdown()
 ```
 
 ---
@@ -130,12 +125,14 @@ mouse.shutdown()
 ### Adding Targets
 
 #### Absolute Target
+
 Queue a movement to a specific screen coordinate:
 ```python
 mouse.enqueue_target_abs(500, 300)
 ```
 
 #### Relative Target
+
 Queue a movement relative to the current cursor position:
 ```python
 mouse.enqueue_target_rel(100, 50)
@@ -222,7 +219,7 @@ Mouse Anywhere logs all actions to `mouse_movement.log` for debugging and monito
 
 We welcome contributions! Here's how to get started:
 
-1. Fork the repository on GitHub.
+1. Fork the repository on [GitHub](https://github.com/wuhplaptop/mouse-anywhere).
 2. Create a feature branch.
 3. Implement your feature or fix.
 4. Submit a pull request.
