@@ -17,7 +17,7 @@ setup(
     description='A Python package for smooth mouse movement using a C library.',
     author='wuhp',
     author_email='wuhp@gmail.com',
-    url='https://github.com/yourusername/mouse-anywhere',  # Replace with your repository URL
+    url='https://github.com/yourusername/mouse-anywhere',  # Replace with your actual URL
     packages=find_packages(),
     include_package_data=True,
     package_data={
