@@ -55,8 +55,8 @@ jobs:
             exit 1
         }
 
-        # Compile the C code into a DLL
-        cmd.exe /c """"$vcvarsall"""" x64 && cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll /I.
+        # Set up the MSVC environment and compile the DLL
+        & cmd /c """$vcvarsall x64 & cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll /I."""
 
     - name: Verify DLL creation
       shell: cmd
@@ -138,8 +138,8 @@ jobs:
             exit 1
         }
 
-        # Compile the C code into a DLL
-        cmd.exe /c """"$vcvarsall"""" x64 && cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll /I.
+        # Set up the MSVC environment and compile the DLL
+        & cmd /c """$vcvarsall x64 & cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll /I."""
 
     - name: Verify DLL creation
       shell: cmd
