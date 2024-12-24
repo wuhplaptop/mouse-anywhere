@@ -1,4 +1,3 @@
-# setup.py
 from setuptools import setup, find_packages
 from setuptools.command.build_py import build_py as build_py_orig
 import os
@@ -17,6 +16,7 @@ setup(
     description='A Python package for smooth mouse movement using a C library.',
     author='wuhp',
     author_email='wuhp@gmail.com',
+    url='https://github.com/yourusername/mouse-anywhere',  # Add your repository URL
     packages=find_packages(),
     include_package_data=True,
     package_data={
