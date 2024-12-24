@@ -52,6 +52,8 @@ jobs:
           echo "DLL was not created."
           exit 1
         )
+        echo "DLL successfully created."
+        dir mouse-anywhere.dll
 
     - name: Copy DLL to Python package
       run: |
@@ -63,23 +65,32 @@ jobs:
       run: |
         python setup.py sdist bdist_wheel
 
+    - name: Verify dist contents
+      run: |
+        echo "Checking dist directory contents:"
+        dir dist
+      shell: cmd
+
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4  # Updated to v4
       with:
-        name: python-package
-        path: dist/*
+        name: built-python-package
+        path: dist/**/*
+
+    - name: Debug uploaded artifacts
+      run: |
+        echo "Artifacts to be uploaded:"
+        dir dist
+      shell: cmd
 
     - name: Run tests
       run: |
         REM List build artifacts for debugging
         dir dist\
-
         REM Install the built package
         for %%f in (dist\*.whl) do pip install %%f || exit 1
-
         REM Install testing dependencies
         pip install pytest
-
         REM Run tests
         pytest tests/
       shell: cmd
@@ -118,6 +129,8 @@ jobs:
           echo "DLL was not created."
           exit 1
         )
+        echo "DLL successfully created."
+        dir mouse-anywhere.dll
 
     - name: Copy DLL to Python package
       run: |
@@ -128,6 +141,12 @@ jobs:
     - name: Build Python package
       run: |
         python setup.py sdist bdist_wheel
+
+    - name: Verify dist contents
+      run: |
+        echo "Checking dist directory contents:"
+        dir dist
+      shell: cmd
 
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@v1.4.2
