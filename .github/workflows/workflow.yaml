@@ -34,8 +34,7 @@ jobs:
       run: |
         rmdir /s /q build
         rmdir /s /q dist
-        rmdir /s /q mouse_anywhere
-        mkdir mouse_anywhere
+        rmdir /s /q mouse_anywhere.egg-info
       shell: cmd
 
     - name: Setup MSVC environment and compile C code
@@ -56,6 +55,7 @@ jobs:
 
     - name: Copy DLL to Python package
       run: |
+        mkdir mouse_anywhere
         copy mouse-anywhere.dll mouse_anywhere\
       shell: cmd
 
@@ -117,6 +117,7 @@ jobs:
 
     - name: Copy DLL to Python package
       run: |
+        mkdir mouse_anywhere
         copy mouse-anywhere.dll mouse_anywhere\
       shell: cmd
 
