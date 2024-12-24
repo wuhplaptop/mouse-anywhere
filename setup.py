@@ -3,14 +3,6 @@ from setuptools import setup, find_packages
 from setuptools.command.build_py import build_py as build_py_orig
 import os
 
-class BuildPy(build_py_orig):
-    def run(self):
-        # Ensure the DLL is included in the package
-        build_py_orig.run(self)
-        dll_source = 'mouse-anywhere.dll'
-        dll_dest = os.path.join(self.build_lib, 'mouse_anywhere', 'mouse-anywhere.dll')
-        self.copy_file(dll_source, dll_dest)
-
 setup(
     name='mouse-anywhere',
     version='0.1.0',
