@@ -1,3 +1,4 @@
+# setup.py
 from setuptools import setup, find_packages
 from setuptools.command.build_py import build_py as build_py_orig
 import os
