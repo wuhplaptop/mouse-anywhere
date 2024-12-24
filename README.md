@@ -8,10 +8,13 @@
 
 ![Mouse Anywhere Banner](https://github.com/wuhplaptop/mouse-anywhere/blob/main/banner.png)
 
+---
+
 ## Table of Contents
 
 - [Introduction](#introduction)
 - [Features](#features)
+- [Why Mouse Anywhere?](#why-mouse-anywhere)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Detailed Usage](#detailed-usage)
@@ -29,57 +32,77 @@
 
 ## Introduction
 
-**Mouse Anywhere** is a Python package providing smooth and programmable mouse movements for Windows systems by leveraging a high-performance C library. Designed for automation, gaming, and demonstrations, this package offers precise and customizable cursor control.
+**Mouse Anywhere** is a Python library that provides smooth and programmable mouse movements on Windows systems, powered by a high-performance C-based DLL. This library is ideal for tasks requiring precise cursor control, such as automation, gaming, GUI testing, and presentations.
+
+Unlike other Python libraries like `pyautogui`, **Mouse Anywhere** supports:
+
+- **Advanced Easing Types:** Enable natural, human-like mouse movements.
+- **Target Queueing:** Queue multiple cursor movements seamlessly.
+- **Absolute and Relative Movement:** Move the cursor by screen coordinates or relative offsets.
+- **High Precision:** Ensure cursor movements stay within screen bounds.
 
 ---
 
 ## Features
 
-- Smooth and natural movements with multiple easing types.
-- **Absolute** and **Relative Targeting** for flexibility.
-- Multithreaded operation to run seamlessly in the background.
-- Queue-based system for sequential movements.
-- Adjustable strength and easing for custom movement profiles.
-- Logging support for debugging and monitoring.
-- Low-level DLL access for advanced use cases.
+- **Smooth Movements:** Supports multiple easing types like sinusoidal, quadratic, and exponential.
+- **Absolute and Relative Targeting:** Flexibly move the cursor.
+- **Queue-Based Targeting:** Chain multiple movements for seamless transitions.
+- **Multi-threading:** Perform cursor operations without blocking the main thread.
+- **DLL Performance:** Leverages native Windows API for efficiency.
+- **Comprehensive Logging:** Tracks every action for debugging and monitoring.
+
+---
+
+## Why Mouse Anywhere?
+
+**Mouse Anywhere** outshines alternatives like `pyautogui` by providing:
+
+- **Advanced Movement Profiles:** Customizable easing types and strengths.
+- **Precision Control:** Handles multi-monitor setups and edge cases.
+- **Background Operations:** Ensures smooth integration with other applications.
+- **Performance and Reliability:** Built with a robust C library for low latency.
 
 ---
 
 ## Installation
 
-Install Mouse Anywhere from [PyPI](https://pypi.org/project/mouse-anywhere/):
+Install Mouse Anywhere via [PyPI](https://pypi.org/project/mouse-anywhere/):
 
 ```bash
 pip install mouse-anywhere
 ```
 
-**Note**: Mouse Anywhere is **Windows-only** due to platform-specific dependencies.
+**Requirements:**
+- Windows 10 or later.
+- Python 3.6 or higher.
+
+**Note:** Mouse Anywhere is **Windows-only** due to platform-specific dependencies.
 
 ---
 
 ## Quick Start
 
-Below is a quick example to get you started:
+Here's a quick example to get you started:
 
 ```python
-from mouse_anywhere import MouseMovement, EASE_SINUSOIDAL
+from mouse_anywhere import MouseAnywhere, EASE_SINUSOIDAL
 import time
 
-# Initialize MouseMovement
-mouse = MouseMovement(easing_type=EASE_SINUSOIDAL, strength=50)
+# Initialize the DLL
+with MouseAnywhere() as mouse:
+    # Move cursor to absolute position (1000, 800)
+    mouse.set_cursor_abs(1000, 800)
 
-# Start the movement
-mouse.start()
+    # Move cursor relatively by (-50, 50)
+    mouse.set_cursor_rel(-50, 50)
 
-# Add targets
-mouse.add_absolute_target(1000, 800)
-mouse.add_relative_target(-50, 50)
+    # Enqueue multiple targets
+    mouse.enqueue_target_abs(800, 600)
+    mouse.enqueue_target_rel(100, 100)
 
-# Allow some time for movement
-time.sleep(5)
-
-# Stop the movement
-mouse.stop()
+    # Allow some time for the movements
+    time.sleep(5)
 ```
 
 ---
@@ -88,29 +111,45 @@ mouse.stop()
 
 ### Initialization
 
-```python
-from mouse_anywhere import MouseMovement, EASE_LINEAR
+To initialize the library, create an instance of `MouseAnywhere` or directly call `initialize()`.
 
-# Create a MouseMovement instance
-mouse = MouseMovement(easing_type=EASE_LINEAR, strength=75)
+```python
+from mouse_anywhere import MouseAnywhere
+
+# Using context manager
+with MouseAnywhere() as mouse:
+    pass  # Cursor operations go here
+
+# Or manually
+mouse = MouseAnywhere()
+mouse.initialize()
+# Perform operations...
+mouse.shutdown()
 ```
 
 ### Adding Targets
 
 #### Absolute Target
+Queue a movement to a specific screen coordinate:
 ```python
-mouse.add_absolute_target(500, 300)
+mouse.enqueue_target_abs(500, 300)
 ```
 
 #### Relative Target
+Queue a movement relative to the current cursor position:
 ```python
-mouse.add_relative_target(100, 50)
+mouse.enqueue_target_rel(100, 50)
 ```
 
 ### Starting and Stopping Movement
 
+Start the movement thread:
 ```python
 mouse.start()
+```
+
+Stop the movement when all operations are done:
+```python
 mouse.stop()
 ```
 
@@ -118,74 +157,77 @@ mouse.stop()
 
 ## Easing Types
 
-| Easing Type      | Description                             |
-| ---------------- | --------------------------------------- |
-| `EASE_LINEAR` (1) | Constant speed throughout the movement. |
-| `EASE_QUADRATIC` (2) | Quadratic acceleration.               |
-| `EASE_SINUSOIDAL` (3) | Smooth sinusoidal easing.            |
-| `EASE_CUBIC` (4)    | Cubic acceleration.                   |
-| `EASE_EXPONENTIAL` (5) | Exponential easing.                 |
+Customize cursor movement with easing functions for a natural feel:
+
+| Easing Type         | Description                                |
+|---------------------|--------------------------------------------|
+| `EASE_LINEAR` (1)   | Constant speed throughout the movement.    |
+| `EASE_QUADRATIC` (2)| Accelerated movement with a quadratic curve.|
+| `EASE_SINUSOIDAL` (3)| Smooth sinusoidal acceleration and deceleration.|
+| `EASE_CUBIC` (4)    | Accelerated movement with a cubic curve.    |
+| `EASE_EXPONENTIAL` (5)| Exponential acceleration.                 |
 
 ---
 
 ## Low-Level API (DLL Integration)
 
-Advanced users can directly interact with the underlying DLL for additional control. Below is an example:
+Advanced users can interact directly with the C-based DLL for custom functionality:
 
 ### Python Integration
 
 ```python
-from ctypes import CDLL, c_int
+from ctypes import CDLL
 
 # Load the DLL
 mouse_dll = CDLL('mouse-anywhere.dll')
 
-# Initialize
+# Initialize the DLL
 mouse_dll.initialize()
 
-# Absolute cursor movement
-mouse_dll.set_cursor_abs(c_int(500), c_int(300))
+# Move the cursor to an absolute position
+mouse_dll.set_cursor_abs(500, 300)
 
-# Shutdown
+# Shutdown the DLL
 mouse_dll.mouse_shutdown()
 ```
 
-### C DLL Functions
+### Exported Functions
 
-The DLL includes the following exported functions:
+The following functions are exposed by the DLL:
 
-- `initialize()` - Initialize the DLL.
-- `mouse_shutdown()` - Shut down the DLL.
-- `set_cursor_abs(int x, int y)` - Move the cursor to an absolute position.
-- `set_cursor_rel(int dx, int dy)` - Move the cursor relatively.
-- `enqueue_target_abs(int x, int y)` - Add absolute target to the queue.
-- `enqueue_target_rel(int dx, int dy)` - Add relative target to the queue.
-
-Refer to the C source for more details.
+- `initialize()` - Initializes the movement system.
+- `mouse_shutdown()` - Cleans up resources and stops operations.
+- `set_cursor_abs(int x, int y)` - Moves the cursor to an absolute screen coordinate.
+- `set_cursor_rel(int dx, int dy)` - Moves the cursor relative to its current position.
+- `enqueue_target_abs(int x, int y)` - Adds an absolute target to the queue.
+- `enqueue_target_rel(int dx, int dy)` - Adds a relative target to the queue.
 
 ---
 
 ## Logging
 
-Mouse Anywhere logs all actions to `mouse_movement.log`:
+Mouse Anywhere logs all actions to `mouse_movement.log` for debugging and monitoring.
 
 **Sample Log:**
 ```
-[2024-12-23 14:35:22] Movement initialized.
-[2024-12-23 14:35:25] Enqueued new target: (1000, 800) [Absolute]
-[2024-12-23 14:35:27] Moved to (1000, 800)
-[2024-12-23 14:35:30] Stopped movement.
+[2024-12-23 14:35:22] DLL initialized.
+[2024-12-23 14:35:25] Enqueued target: (1000, 800) [Absolute]
+[2024-12-23 14:35:27] Cursor moved to (1000, 800).
+[2024-12-23 14:35:30] DLL shutdown.
 ```
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Follow these steps:
+We welcome contributions! Here's how to get started:
 
-1. Fork the repo.
+1. Fork the repository on GitHub.
 2. Create a feature branch.
-3. Submit a pull request.
+3. Implement your feature or fix.
+4. Submit a pull request.
+
+See the [contribution guidelines](https://github.com/wuhplaptop/mouse-anywhere/blob/main/CONTRIBUTING.md) for more details.
 
 ---
 
@@ -197,8 +239,8 @@ This project is licensed under the MIT License. See the [LICENSE](https://github
 
 ## Acknowledgements
 
-Special thanks to the contributors and users who made this project possible.
+Special thanks to the contributors and community for supporting this project.
 
 ---
 
-**Mouse Anywhere** — Smooth, customizable, and powerful mouse control for Windows!
+**Mouse Anywhere** — Smooth, programmable mouse control for Windows.
