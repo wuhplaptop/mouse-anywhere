@@ -1,0 +1,167 @@
+name: Build, Test, and Publish
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'  # Specify the Python version you need
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel
+
+    - name: Setup MSVC environment and compile C code
+      shell: powershell
+      run: |
+        $ErrorActionPreference = "Stop"
+        $vswhere = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+
+        if (!(Test-Path $vswhere)) {
+            Write-Error "vswhere.exe not found."
+            exit 1
+        }
+
+        $installPath = &$vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+
+        if (!$installPath) {
+            Write-Error "Visual Studio installation not found."
+            exit 1
+        }
+
+        $vcvarsall = Join-Path $installPath "VC\Auxiliary\Build\vcvarsall.bat"
+
+        if (!(Test-Path $vcvarsall)) {
+            Write-Error "vcvarsall.bat not found."
+            exit 1
+        }
+
+        # Compile the C code into a DLL
+        cmd.exe /c """"$vcvarsall"""" x64 && cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll /I.
+
+    - name: Verify DLL creation
+      shell: cmd
+      run: |
+        if not exist mouse-anywhere.dll (
+          echo "DLL was not created."
+          exit 1
+        )
+
+    - name: Copy DLL to Python package
+      run: |
+        mkdir mouse_anywhere
+        copy mouse-anywhere.dll mouse_anywhere\
+
+      shell: cmd
+
+    - name: Build Python package
+      run: |
+        python setup.py sdist bdist_wheel
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: python-package
+        path: dist/*
+
+    - name: Run tests
+      run: |
+        # Install the built package
+        pip install dist\*.whl
+
+        # Install testing dependencies
+        pip install pytest
+
+        # Run tests
+        pytest
+
+  publish:
+    needs: build
+    runs-on: windows-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel twine
+
+    - name: Setup MSVC environment and compile C code
+      shell: powershell
+      run: |
+        $ErrorActionPreference = "Stop"
+        $vswhere = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+
+        if (!(Test-Path $vswhere)) {
+            Write-Error "vswhere.exe not found."
+            exit 1
+        }
+
+        $installPath = &$vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+
+        if (!$installPath) {
+            Write-Error "Visual Studio installation not found."
+            exit 1
+        }
+
+        $vcvarsall = Join-Path $installPath "VC\Auxiliary\Build\vcvarsall.bat"
+
+        if (!(Test-Path $vcvarsall)) {
+            Write-Error "vcvarsall.bat not found."
+            exit 1
+        }
+
+        # Compile the C code into a DLL
+        cmd.exe /c """"$vcvarsall"""" x64 && cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll /I.
+
+    - name: Verify DLL creation
+      shell: cmd
+      run: |
+        if not exist mouse-anywhere.dll (
+          echo "DLL was not created."
+          exit 1
+        )
+
+    - name: Copy DLL to Python package
+      run: |
+        mkdir mouse_anywhere
+        copy mouse-anywhere.dll mouse_anywhere\
+
+      shell: cmd
+
+    - name: Build Python package
+      run: |
+        python setup.py sdist bdist_wheel
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.4.2
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
