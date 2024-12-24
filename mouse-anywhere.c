@@ -1,3 +1,4 @@
+// mouse-anywhere.c
 #include <windows.h>
 #include <math.h>
 #include <stdio.h>
@@ -49,22 +50,32 @@ typedef struct {
     // Queue for multiple targets
     Target* queue_head;
     Target* queue_tail;
+
+    // Threads
+    HANDLE move_thread;
 } MovementParams;
 
-// Function prototypes
+// Function prototypes with export declarations
+__declspec(dllexport) void initialize();
+__declspec(dllexport) void mouse_shutdown(); // Renamed from 'shutdown'
+__declspec(dllexport) void set_cursor_abs(int x, int y);
+__declspec(dllexport) void set_cursor_rel(int delta_x, int delta_y);
+__declspec(dllexport) void enqueue_target_abs(int x, int y);
+__declspec(dllexport) void enqueue_target_rel(int delta_x, int delta_y);
+
+// Internal function prototypes
 double ease(double t, EasingType easing_type);
-void set_cursor_abs(int x, int y);
-void set_cursor_rel(int delta_x, int delta_y);
+void set_cursor_abs_internal(int x, int y);
+void set_cursor_rel_internal(int delta_x, int delta_y);
 void enforce_screen_bounds(int* x, int* y);
 DWORD WINAPI smooth_move_thread(LPVOID arg);
-DWORD WINAPI input_thread(LPVOID arg);
 void log_message(const char* message);
 void enqueue_target(MovementParams* params, int x, int y, bool relative);
 bool dequeue_target(MovementParams* params, int* x, int* y, bool* relative);
-void parse_arguments(int argc, char* argv[], MovementParams* params);
 
-// Global log file pointer
+// Global variables
 FILE* logFile = NULL;
+MovementParams* global_params = NULL;
 
 // Function to calculate eased values (linear, quadratic, sinusoidal, cubic, exponential easing)
 double ease(double t, EasingType easing_type) {
@@ -84,41 +95,39 @@ double ease(double t, EasingType easing_type) {
     }
 }
 
-// Function to set cursor to an absolute position using SendInput
-void set_cursor_abs(int x, int y) {
-    // Get virtual screen resolution
-    int virtualLeft = GetSystemMetrics(SM_XVIRTUALSCREEN);
-    int virtualTop = GetSystemMetrics(SM_YVIRTUALSCREEN);
-    int virtualWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-    int virtualHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+// Function to set cursor to an absolute position using SetCursorPos
+void set_cursor_abs_internal(int x, int y) {
+    // Enforce screen boundaries
+    enforce_screen_bounds(&x, &y);
 
-    // Normalize coordinates to [0, 65535]
-    double normalizedX = ((double)(x - virtualLeft) * 65535.0) / (virtualWidth - 1);
-    double normalizedY = ((double)(y - virtualTop) * 65535.0) / (virtualHeight - 1);
-
-    INPUT input = {0};
-    input.type = INPUT_MOUSE;
-    input.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
-    input.mi.dx = (LONG)normalizedX;
-    input.mi.dy = (LONG)normalizedY;
-
-    UINT sent = SendInput(1, &input, sizeof(INPUT));
-    if (sent != 1) {
-        log_message("Error: SendInput failed to move cursor.");
+    BOOL result = SetCursorPos(x, y);
+    if (!result) {
+        log_message("Error: SetCursorPos failed to move cursor.");
+    } else {
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "Moved cursor to absolute position (%d, %d)", x, y);
+        log_message(buffer);
     }
 }
 
 // Function to move cursor relative to its current position
-void set_cursor_rel(int delta_x, int delta_y) {
-    INPUT input = {0};
-    input.type = INPUT_MOUSE;
-    input.mi.dwFlags = MOUSEEVENTF_MOVE;
-    input.mi.dx = delta_x;
-    input.mi.dy = delta_y;
-
-    UINT sent = SendInput(1, &input, sizeof(INPUT));
-    if (sent != 1) {
-        log_message("Error: SendInput failed to move cursor relatively.");
+void set_cursor_rel_internal(int delta_x, int delta_y) {
+    POINT pos;
+    if (GetCursorPos(&pos)) {
+        pos.x += delta_x;
+        pos.y += delta_y;
+        // Enforce screen boundaries
+        enforce_screen_bounds(&pos.x, &pos.y);
+        BOOL result = SetCursorPos(pos.x, pos.y);
+        if (!result) {
+            log_message("Error: SetCursorPos failed to move cursor relatively.");
+        } else {
+            char buffer[100];
+            snprintf(buffer, sizeof(buffer), "Moved cursor relatively by (%d, %d)", delta_x, delta_y);
+            log_message(buffer);
+        }
+    } else {
+        log_message("Error: GetCursorPos failed.");
     }
 }
 
@@ -307,9 +316,9 @@ DWORD WINAPI smooth_move_thread(LPVOID arg) {
             if (relative) {
                 int move_x = current_x - start_pos.x;
                 int move_y = current_y - start_pos.y;
-                set_cursor_rel(move_x, move_y);
+                set_cursor_rel_internal(move_x, move_y);
             } else {
-                set_cursor_abs(current_x, current_y);
+                set_cursor_abs_internal(current_x, current_y);
             }
 
             // Log the movement
@@ -353,168 +362,120 @@ DWORD WINAPI smooth_move_thread(LPVOID arg) {
     return 0;
 }
 
-// Thread function for handling user input
-DWORD WINAPI input_thread(LPVOID arg) {
-    MovementParams* params = (MovementParams*)arg;
-    char command[256];
-
-    printf("Enter commands to add targets or perform actions.\n");
-    printf("Commands:\n");
-    printf("  add_abs x y       - Add an absolute target at (x, y)\n");
-    printf("  add_rel dx dy     - Add a relative movement by (dx, dy)\n");
-    printf("  quit              - Exit the program\n");
-    printf("Example: add_abs 1000 800\n");
-    printf("Example: add_rel -50 50\n");
-
-    while (true) {
-        printf("> ");
-        if (fgets(command, sizeof(command), stdin) == NULL) {
-            continue;
-        }
-
-        // Remove trailing newline
-        command[strcspn(command, "\n")] = 0;
-
-        // Parse the command
-        if (strncmp(command, "add_abs", 7) == 0) {
-            int x, y;
-            if (sscanf(command + 7, "%d %d", &x, &y) == 2) {
-                enqueue_target(params, x, y, false);
-            } else {
-                printf("Invalid command format. Usage: add_abs x y\n");
-            }
-        } else if (strncmp(command, "add_rel", 7) == 0) {
-            int dx, dy;
-            if (sscanf(command + 7, "%d %d", &dx, &dy) == 2) {
-                enqueue_target(params, dx, dy, true);
-            } else {
-                printf("Invalid command format. Usage: add_rel dx dy\n");
-            }
-        } else if (strcmp(command, "quit") == 0) {
-            printf("Quit command received. Exiting...\n");
-            log_message("Quit command received. Exiting program.");
-            EnterCriticalSection(&params->cs);
-            params->active = false;
-            LeaveCriticalSection(&params->cs);
-            break;
-        } else {
-            printf("Unknown command. Available commands: add_abs, add_rel, quit\n");
-        }
+// DllMain (for initialization and cleanup)
+BOOL APIENTRY DllMain(HMODULE hModule,
+                      DWORD  ul_reason_for_call,
+                      LPVOID lpReserved
+                      )
+{
+    switch (ul_reason_for_call)
+    {
+    case DLL_PROCESS_ATTACH:
+        // Initialization can be done here if needed
+        break;
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+        break;
+    case DLL_PROCESS_DETACH:
+        // Cleanup can be done here if needed
+        break;
     }
-
-    return 0;
+    return TRUE;
 }
 
-// Function to parse command-line arguments and set movement parameters
-void parse_arguments(int argc, char* argv[], MovementParams* params) {
-    for (int i = 1; i < argc; i++) {
-        if ((strcmp(argv[i], "-x") == 0 || strcmp(argv[i], "--target_x") == 0) && i + 1 < argc) {
-            int x = atoi(argv[++i]);
-            params->target_x = x;
-        } else if ((strcmp(argv[i], "-y") == 0 || strcmp(argv[i], "--target_y") == 0) && i + 1 < argc) {
-            int y = atoi(argv[++i]);
-            params->target_y = y;
-        } else if ((strcmp(argv[i], "-e") == 0 || strcmp(argv[i], "--easing") == 0) && i + 1 < argc) {
-            int e = atoi(argv[++i]);
-            if (e >= EASE_LINEAR && e <= EASE_EXPONENTIAL) {
-                params->easing_type = (EasingType)e;
-            } else {
-                printf("Invalid easing type. Using default (EASE_SINUSOIDAL).\n");
-            }
-        } else if ((strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--strength") == 0) && i + 1 < argc) {
-            int t = atoi(argv[++i]);
-            if (t >= MIN_STRENGTH && t <= MAX_STRENGTH) {
-                params->strength = t;
-            } else {
-                printf("Strength must be between %d and %d. Using default (50).\n", MIN_STRENGTH, MAX_STRENGTH);
-            }
-        } else {
-            printf("Unknown argument: %s\n", argv[i]);
-            printf("Usage: %s [-x target_x] [-y target_y] [-e easing_type] [-t strength]\n", argv[0]);
-            printf("Easing Types:\n");
-            printf("  1 - Linear\n");
-            printf("  2 - Quadratic\n");
-            printf("  3 - Sinusoidal\n");
-            printf("  4 - Cubic\n");
-            printf("  5 - Exponential\n");
-            exit(1);
-        }
-    }
-}
-
-int main(int argc, char* argv[]) {
+// Initialize the DLL
+__declspec(dllexport) void initialize() {
     // Open log file
     logFile = fopen(LOG_FILE, "a");
     if (!logFile) {
-        printf("Error: Unable to open log file.\n");
-        return 1;
+        // Handle error
+        return;
     }
-    log_message("Program started.");
+    log_message("DLL initialized.");
 
-    srand((unsigned int)time(NULL)); // Initialize random seed if needed
-
-    printf("Starting enhanced mouse movement program...\n");
-    log_message("Starting enhanced mouse movement program.");
-
-    // Define movement parameters with default values
-    MovementParams params = {
-        .target_x = 800,                // Initial Target X position (not used in queue)
-        .target_y = 600,                // Initial Target Y position (not used in queue)
-        .easing_type = EASE_SINUSOIDAL, // Easing type for smoothness
-        .strength = 50,                 // Strength (maps to steps)
-        .active = true,                 // Active state
-        .paused = false,                // Paused state
-        .queue_head = NULL,
-        .queue_tail = NULL
-    };
-
-    // Initialize the critical section
-    InitializeCriticalSection(&params.cs);
-
-    // Parse command-line arguments to override default parameters
-    parse_arguments(argc, argv, &params);
-
-    // Log initial parameters
-    char buffer[200];
-    snprintf(buffer, sizeof(buffer),
-             "Parameters - Initial Target: (%d, %d), Easing Type: %d, Strength: %d",
-             params.target_x,
-             params.target_y,
-             params.easing_type,
-             params.strength);
-    log_message(buffer);
-
-    // Create a thread to perform smooth movement
-    HANDLE move_thread = CreateThread(NULL, 0, smooth_move_thread, &params, 0, NULL);
-    if (move_thread == NULL) {
+    // Allocate and initialize MovementParams
+    global_params = (MovementParams*)malloc(sizeof(MovementParams));
+    if (!global_params) {
+        log_message("Error: Unable to allocate MovementParams.");
+        return;
+    }
+    global_params->target_x = 800;
+    global_params->target_y = 600;
+    global_params->easing_type = EASE_SINUSOIDAL;
+    global_params->strength = 50;
+    global_params->active = true;
+    global_params->paused = false;
+    global_params->queue_head = NULL;
+    global_params->queue_tail = NULL;
+    InitializeCriticalSection(&global_params->cs);
+    global_params->move_thread = CreateThread(NULL, 0, smooth_move_thread, global_params, 0, NULL);
+    if (global_params->move_thread == NULL) {
         log_message("Error: Unable to create movement thread.");
-        fclose(logFile);
-        DeleteCriticalSection(&params.cs);
-        return 1;
     }
 
-    // Create a thread to handle user input
-    HANDLE in_thread = CreateThread(NULL, 0, input_thread, &params, 0, NULL);
-    if (in_thread == NULL) {
-        log_message("Error: Unable to create input thread.");
-        fclose(logFile);
-        DeleteCriticalSection(&params.cs);
-        return 1;
+    log_message("MovementParams initialized and movement thread started.");
+}
+
+// Shutdown the DLL
+__declspec(dllexport) void mouse_shutdown() { // Renamed from 'shutdown'
+    log_message("Shutdown called.");
+
+    if (global_params) {
+        EnterCriticalSection(&global_params->cs);
+        global_params->active = false;
+        LeaveCriticalSection(&global_params->cs);
+
+        // Wait for the movement thread to finish
+        if (global_params->move_thread != NULL) {
+            WaitForSingleObject(global_params->move_thread, INFINITE);
+            CloseHandle(global_params->move_thread);
+            global_params->move_thread = NULL;
+        }
+
+        // Clean up queue
+        Target* current = global_params->queue_head;
+        while (current) {
+            Target* next = current->next;
+            free(current);
+            current = next;
+        }
+
+        DeleteCriticalSection(&global_params->cs);
+        free(global_params);
+        global_params = NULL;
     }
 
-    // Wait for the input thread to finish (which will happen when 'quit' is called)
-    WaitForSingleObject(in_thread, INFINITE);
+    if (logFile) {
+        log_message("DLL shutting down.");
+        fclose(logFile);
+        logFile = NULL;
+    }
+}
 
-    // After quitting, wait for the movement thread to finish
-    WaitForSingleObject(move_thread, INFINITE);
+// Function to set cursor to an absolute position
+__declspec(dllexport) void set_cursor_abs(int x, int y) {
+    set_cursor_abs_internal(x, y);
+}
 
-    // Clean up
-    CloseHandle(move_thread);
-    CloseHandle(in_thread);
-    log_message("Movement thread has terminated.");
-    fclose(logFile);
-    DeleteCriticalSection(&params.cs);
+// Function to move cursor relative to current position
+__declspec(dllexport) void set_cursor_rel(int delta_x, int delta_y) {
+    set_cursor_rel_internal(delta_x, delta_y);
+}
 
-    printf("Movement complete. Exiting program.\n");
-    return 0;
+// Function to enqueue an absolute target
+__declspec(dllexport) void enqueue_target_abs(int x, int y) {
+    if (global_params) {
+        enqueue_target(global_params, x, y, false);
+    } else {
+        log_message("Error: DLL not initialized. Call initialize() first.");
+    }
+}
+
+// Function to enqueue a relative target
+__declspec(dllexport) void enqueue_target_rel(int delta_x, int delta_y) {
+    if (global_params) {
+        enqueue_target(global_params, delta_x, delta_y, true);
+    } else {
+        log_message("Error: DLL not initialized. Call initialize() first.");
+    }
 }
