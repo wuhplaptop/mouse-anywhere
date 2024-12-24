@@ -72,7 +72,7 @@ jobs:
         shell: cmd
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4  # Updated to v4
+        uses: actions/upload-artifact@v4
         with:
           name: built-python-package
           path: dist/**/*
@@ -98,6 +98,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: built-python-package
+          path: dist
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -106,44 +112,11 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install setuptools wheel twine
+          pip install twine
 
-      - name: Setup MSVC environment and compile C code
-        shell: cmd
+      - name: Publish to PyPI with Twine
         run: |
-          "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vcpath.txt
-          set /p vcpath=<vcpath.txt
-          call "%vcpath%\VC\Auxiliary\Build\vcvarsall.bat" x64
-          cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll user32.lib
-
-      - name: Verify DLL creation
-        shell: cmd
-        run: |
-          if not exist mouse-anywhere.dll (
-            echo "DLL was not created."
-            exit 1
-          )
-          echo "DLL successfully created."
-          dir mouse-anywhere.dll
-
-      - name: Copy DLL to Python package
-        run: |
-          mkdir mouse_anywhere
-          copy mouse-anywhere.dll mouse_anywhere\
-        shell: cmd
-
-      - name: Build Python package
-        run: |
-          python setup.py sdist bdist_wheel
-
-      - name: Verify dist contents
-        run: |
-          echo "Checking dist directory contents:"
-          dir dist
-        shell: cmd
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.4.2
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          python -m twine upload dist/* --verbose
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
