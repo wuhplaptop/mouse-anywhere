@@ -1,3 +1,4 @@
+# .github/workflows/build.yml
 name: Build, Test, and Publish
 
 on:
@@ -43,7 +44,7 @@ jobs:
         "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vcpath.txt
         set /p vcpath=<vcpath.txt
         call "%vcpath%\VC\Auxiliary\Build\vcvarsall.bat" x64
-        cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll /I. user32.lib
+        cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll user32.lib
 
     - name: Verify DLL creation
       shell: cmd
@@ -73,7 +74,7 @@ jobs:
       run: |
         # List build artifacts for debugging
         dir dist\
-        
+  
         # Install the built package
         pip install dist\*.whl || exit 1
 
@@ -109,7 +110,7 @@ jobs:
         "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vcpath.txt
         set /p vcpath=<vcpath.txt
         call "%vcpath%\VC\Auxiliary\Build\vcvarsall.bat" x64
-        cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll /I. user32.lib
+        cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll user32.lib
 
     - name: Verify DLL creation
       shell: cmd
