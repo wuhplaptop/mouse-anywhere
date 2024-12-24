@@ -1,4 +1,3 @@
-# mouse_anywhere/mouse_anywhere.py
 import ctypes
 import os
 from ctypes import wintypes
