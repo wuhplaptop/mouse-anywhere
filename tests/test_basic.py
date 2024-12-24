@@ -1,4 +1,3 @@
-# tests/test_basic.py
 import pytest
 from unittest import mock
 import mouse_anywhere
