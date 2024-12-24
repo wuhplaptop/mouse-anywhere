@@ -31,32 +31,12 @@ jobs:
         pip install setuptools wheel
 
     - name: Setup MSVC environment and compile C code
-      shell: powershell
+      shell: cmd
       run: |
-        $ErrorActionPreference = "Stop"
-        $vswhere = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
-
-        if (!(Test-Path $vswhere)) {
-            Write-Error "vswhere.exe not found."
-            exit 1
-        }
-
-        $installPath = &$vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-
-        if (!$installPath) {
-            Write-Error "Visual Studio installation not found."
-            exit 1
-        }
-
-        $vcvarsall = Join-Path $installPath "VC\Auxiliary\Build\vcvarsall.bat"
-
-        if (!(Test-Path $vcvarsall)) {
-            Write-Error "vcvarsall.bat not found."
-            exit 1
-        }
-
-        # Set up the MSVC environment and compile the DLL
-        & cmd /c """$vcvarsall x64 & cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll /I."""
+        "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vcpath.txt
+        set /p vcpath=<vcpath.txt
+        call "%vcpath%\VC\Auxiliary\Build\vcvarsall.bat" x64
+        cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll /I.
 
     - name: Verify DLL creation
       shell: cmd
@@ -114,32 +94,12 @@ jobs:
         pip install setuptools wheel twine
 
     - name: Setup MSVC environment and compile C code
-      shell: powershell
+      shell: cmd
       run: |
-        $ErrorActionPreference = "Stop"
-        $vswhere = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
-
-        if (!(Test-Path $vswhere)) {
-            Write-Error "vswhere.exe not found."
-            exit 1
-        }
-
-        $installPath = &$vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-
-        if (!$installPath) {
-            Write-Error "Visual Studio installation not found."
-            exit 1
-        }
-
-        $vcvarsall = Join-Path $installPath "VC\Auxiliary\Build\vcvarsall.bat"
-
-        if (!(Test-Path $vcvarsall)) {
-            Write-Error "vcvarsall.bat not found."
-            exit 1
-        }
-
-        # Set up the MSVC environment and compile the DLL
-        & cmd /c """$vcvarsall x64 & cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll /I."""
+        "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vcpath.txt
+        set /p vcpath=<vcpath.txt
+        call "%vcpath%\VC\Auxiliary\Build\vcvarsall.bat" x64
+        cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll /I.
 
     - name: Verify DLL creation
       shell: cmd
