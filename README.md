@@ -19,206 +19,186 @@
   - [Adding Targets](#adding-targets)
   - [Starting and Stopping Movement](#starting-and-stopping-movement)
 - [Easing Types](#easing-types)
-- [API Reference](#api-reference)
+- [Low-Level API (DLL Integration)](#low-level-api-dll-integration)
 - [Logging](#logging)
 - [Contributing](#contributing)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
 
+---
+
 ## Introduction
 
-**Mouse Anywhere** is a Python package that provides smooth and programmable mouse movements on Windows systems by leveraging a high-performance C library. Whether you're automating repetitive tasks, creating demonstrations, or enhancing your gaming experience, Mouse Anywhere offers precise and customizable control over your mouse cursor.
+**Mouse Anywhere** is a Python package providing smooth and programmable mouse movements for Windows systems by leveraging a high-performance C library. Designed for automation, gaming, and demonstrations, this package offers precise and customizable cursor control.
+
+---
 
 ## Features
 
-- **Smooth Movement**: Utilize various easing functions to achieve natural and fluid mouse movements.
-- **Absolute and Relative Targeting**: Move the cursor to specific screen coordinates or relative to its current position.
-- **Multithreaded Operation**: Perform mouse movements in the background without blocking your main application.
-- **Queue System**: Add multiple movement targets that execute sequentially.
-- **Customizable Strength and Easing**: Adjust the speed and style of movements to fit your needs.
-- **Logging**: Keep track of all movements and actions with detailed logs.
+- Smooth and natural movements with multiple easing types.
+- **Absolute** and **Relative Targeting** for flexibility.
+- Multithreaded operation to run seamlessly in the background.
+- Queue-based system for sequential movements.
+- Adjustable strength and easing for custom movement profiles.
+- Logging support for debugging and monitoring.
+- Low-level DLL access for advanced use cases.
+
+---
 
 ## Installation
 
-Mouse Anywhere is available on [PyPI](https://pypi.org/project/mouse-anywhere/). You can install it using `pip`:
+Install Mouse Anywhere from [PyPI](https://pypi.org/project/mouse-anywhere/):
 
 ```bash
 pip install mouse-anywhere
 ```
 
-**Note**: This package is **Windows-only** due to its reliance on Windows-specific APIs.
+**Note**: Mouse Anywhere is **Windows-only** due to platform-specific dependencies.
+
+---
 
 ## Quick Start
 
-Here's a simple example to get you started with Mouse Anywhere:
+Below is a quick example to get you started:
 
 ```python
 from mouse_anywhere import MouseMovement, EASE_SINUSOIDAL
 import time
 
-# Initialize MouseMovement with Sinusoidal easing and medium strength
+# Initialize MouseMovement
 mouse = MouseMovement(easing_type=EASE_SINUSOIDAL, strength=50)
 
-# Start the movement thread
+# Start the movement
 mouse.start()
 
-# Add an absolute target to move the cursor to (1000, 800)
+# Add targets
 mouse.add_absolute_target(1000, 800)
-
-# Add a relative target to move the cursor left by 50 pixels and down by 50 pixels
 mouse.add_relative_target(-50, 50)
 
-# Allow some time for movements to execute
+# Allow some time for movement
 time.sleep(5)
 
-# Stop the movement thread
+# Stop the movement
 mouse.stop()
 ```
+
+---
 
 ## Detailed Usage
 
 ### Initialization
 
-To begin using Mouse Anywhere, create an instance of `MouseMovement` with your desired settings:
-
 ```python
 from mouse_anywhere import MouseMovement, EASE_LINEAR
 
-# Parameters:
-# easing_type: Determines the movement easing function.
-# strength: Controls the speed and smoothness (1-100).
-
+# Create a MouseMovement instance
 mouse = MouseMovement(easing_type=EASE_LINEAR, strength=75)
 ```
 
 ### Adding Targets
 
-You can queue multiple movement targets, both absolute and relative.
-
-#### Add Absolute Target
-
-Moves the cursor to specific screen coordinates.
-
+#### Absolute Target
 ```python
-# Move cursor to (500, 300) on the screen
 mouse.add_absolute_target(500, 300)
 ```
 
-#### Add Relative Target
-
-Moves the cursor relative to its current position.
-
+#### Relative Target
 ```python
-# Move cursor 100 pixels to the right and 50 pixels down
 mouse.add_relative_target(100, 50)
 ```
 
 ### Starting and Stopping Movement
 
-Start the background thread to begin processing queued movements and stop it when done.
-
 ```python
-# Start processing movements
 mouse.start()
-
-# ... Add targets as needed ...
-
-# Stop processing movements
 mouse.stop()
 ```
 
-## Easing Types
+---
 
-Easing functions determine how the cursor accelerates and decelerates during movement. Mouse Anywhere supports the following easing types:
+## Easing Types
 
 | Easing Type      | Description                             |
 | ---------------- | --------------------------------------- |
 | `EASE_LINEAR` (1) | Constant speed throughout the movement. |
-| `EASE_QUADRATIC` (2) | Accelerates quadratically at the start. |
-| `EASE_SINUSOIDAL` (3) | Smooth sinusoidal acceleration and deceleration. |
-| `EASE_CUBIC` (4) | Accelerates cubically, offering a more pronounced easing effect. |
-| `EASE_EXPONENTIAL` (5) | Starts slowly and accelerates exponentially. |
+| `EASE_QUADRATIC` (2) | Quadratic acceleration.               |
+| `EASE_SINUSOIDAL` (3) | Smooth sinusoidal easing.            |
+| `EASE_CUBIC` (4)    | Cubic acceleration.                   |
+| `EASE_EXPONENTIAL` (5) | Exponential easing.                 |
 
-**Example Usage:**
+---
 
-```python
-from mouse_anywhere import MouseMovement, EASE_QUADRATIC
+## Low-Level API (DLL Integration)
 
-mouse = MouseMovement(easing_type=EASE_QUADRATIC, strength=60)
-```
+Advanced users can directly interact with the underlying DLL for additional control. Below is an example:
 
-## API Reference
-
-### `MouseMovement` Class
-
-#### Initialization
+### Python Integration
 
 ```python
-MouseMovement(easing_type=EASE_TYPE, strength=INT)
+from ctypes import CDLL, c_int
+
+# Load the DLL
+mouse_dll = CDLL('mouse-anywhere.dll')
+
+# Initialize
+mouse_dll.initialize()
+
+# Absolute cursor movement
+mouse_dll.set_cursor_abs(c_int(500), c_int(300))
+
+# Shutdown
+mouse_dll.mouse_shutdown()
 ```
 
-- **Parameters**:
-  - `easing_type` (`int`): The easing function to use (see [Easing Types](#easing-types)).
-  - `strength` (`int`): Determines the speed and smoothness (1-100).
+### C DLL Functions
 
-#### Methods
+The DLL includes the following exported functions:
 
-- **`start()`**
+- `initialize()` - Initialize the DLL.
+- `mouse_shutdown()` - Shut down the DLL.
+- `set_cursor_abs(int x, int y)` - Move the cursor to an absolute position.
+- `set_cursor_rel(int dx, int dy)` - Move the cursor relatively.
+- `enqueue_target_abs(int x, int y)` - Add absolute target to the queue.
+- `enqueue_target_rel(int dx, int dy)` - Add relative target to the queue.
 
-  Starts the movement processing thread.
+Refer to the C source for more details.
 
-  ```python
-  mouse.start()
-  ```
-
-- **`stop()`**
-
-  Stops the movement processing thread gracefully.
-
-  ```python
-  mouse.stop()
-  ```
-
-- **`add_absolute_target(x, y)`**
-
-  Adds an absolute movement target to the queue.
-
-  ```python
-  mouse.add_absolute_target(800, 600)
-  ```
-
-- **`add_relative_target(dx, dy)`**
-
-  Adds a relative movement target to the queue.
-
-  ```python
-  mouse.add_relative_target(-100, 100)
-  ```
-
-### Easing Type Constants
-
-```python
-from mouse_anywhere import (
-    EASE_LINEAR,
-    EASE_QUADRATIC,
-    EASE_SINUSOIDAL,
-    EASE_CUBIC,
-    EASE_EXPONENTIAL
-)
-```
+---
 
 ## Logging
 
-Mouse Anywhere maintains a log file named `mouse-anywhere.log` in the working directory. This log records all actions, movements, and any encountered errors, aiding in debugging and monitoring.
+Mouse Anywhere logs all actions to `mouse_movement.log`:
 
-**Sample Log Entry:**
-
+**Sample Log:**
 ```
-[2024-12-23 14:35:22] MovementParams created.
-[2024-12-23 14:35:25] Movement thread started.
-[2024-12-23 14:35:26] Enqueued new target: (1000, 800) [Absolute]
+[2024-12-23 14:35:22] Movement initialized.
+[2024-12-23 14:35:25] Enqueued new target: (1000, 800) [Absolute]
 [2024-12-23 14:35:27] Moved to (1000, 800)
-[2024-12-23 14:35:28] Target reached within radius.
-[2024-12-23 14:35:30] Movement stopped.
-[2024-12-23 14:35:30] MovementParams destroyed.
+[2024-12-23 14:35:30] Stopped movement.
 ```
+
+---
+
+## Contributing
+
+Contributions are welcome! Follow these steps:
+
+1. Fork the repo.
+2. Create a feature branch.
+3. Submit a pull request.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/wuhplaptop/mouse-anywhere/blob/main/LICENSE) file for details.
+
+---
+
+## Acknowledgements
+
+Special thanks to the contributors and users who made this project possible.
+
+---
+
+**Mouse Anywhere** — Smooth, customizable, and powerful mouse control for Windows!
