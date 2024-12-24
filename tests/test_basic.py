@@ -1,51 +1,41 @@
-# abexample.py
-from mouse_anywhere import (
-    initialize,
-    shutdown,
-    set_cursor_abs,
-    set_cursor_rel,
-    enqueue_target_abs,
-    enqueue_target_rel
-)
-import time
+import pytest
+from unittest import mock
+import mouse_anywhere
+import ctypes
 
-# Define easing constants
-EASE_LINEAR = 1
-EASE_QUADRATIC = 2
-EASE_SINUSOIDAL = 3
-EASE_CUBIC = 4
-EASE_EXPONENTIAL = 5
+# Mock the ctypes.CDLL to prevent actual DLL loading during tests
+@mock.patch('ctypes.CDLL')
+def test_package_import(mock_cdll):
+    # Simulate successful DLL loading
+    mock_cdll.return_value = mock.Mock()
+    import mouse_anywhere
+    assert mouse_anywhere is not None
 
-def main():
-    # Initialize the DLL
-    initialize()
-    print("Initialized mouse_anywhere DLL.")
+def test_initialize_shutdown():
+    with mock.patch('ctypes.CDLL') as mock_cdll, \
+         mock.patch('mouse_anywhere.mouse_anywhere.mouse_anywhere_dll.initialize') as mock_init, \
+         mock.patch('mouse_anywhere.mouse_anywhere.mouse_anywhere_dll.mouse_shutdown') as mock_shutdown:
+        mock_cdll.return_value = mock.Mock()
+        mouse_anywhere.initialize()
+        mock_init.assert_called_once()
 
-    try:
-        # Move the cursor to absolute position (500, 500)
-        print("Moving cursor to (500, 500)...")
-        set_cursor_abs(500, 500)
-        time.sleep(2)
+        mouse_anywhere.shutdown()
+        mock_shutdown.assert_called_once()
 
-        # Move the cursor relative by (100, 100)
-        print("Moving cursor relative by (100, 100)...")
-        set_cursor_rel(100, 100)
-        time.sleep(2)
+def test_set_cursor_functions():
+    with mock.patch('mouse_anywhere.mouse_anywhere.mouse_anywhere_dll.set_cursor_abs') as mock_set_abs, \
+         mock.patch('mouse_anywhere.mouse_anywhere.mouse_anywhere_dll.set_cursor_rel') as mock_set_rel:
+        mouse_anywhere.set_cursor_abs(100, 100)
+        mock_set_abs.assert_called_once_with(100, 100)
 
-        # Enqueue a target absolute position for smooth movement
-        print("Enqueueing target position (800, 600) for smooth movement...")
-        enqueue_target_abs(800, 600)
-        time.sleep(5)  # Wait for movement to complete
+        mouse_anywhere.set_cursor_rel(50, -50)
+        mock_set_rel.assert_called_once_with(50, -50)
 
-        # Enqueue a target relative movement
-        print("Enqueueing relative movement by (-200, -200)...")
-        enqueue_target_rel(-200, -200)
-        time.sleep(5)
+def test_enqueue_functions():
+    with mock.patch('mouse_anywhere.mouse_anywhere.mouse_anywhere_dll.enqueue_target_abs') as mock_enqueue_abs, \
+         mock.patch('mouse_anywhere.mouse_anywhere.mouse_anywhere_dll.enqueue_target_rel') as mock_enqueue_rel:
+        mouse_anywhere.enqueue_target_abs(800, 600)
+        mock_enqueue_abs.assert_called_once_with(800, 600)
 
-    finally:
-        # Shutdown the DLL
-        shutdown()
-        print("Shutdown mouse_anywhere DLL.")
-
-if __name__ == "__main__":
-    main()
+        mouse_anywhere.enqueue_target_rel(-50, 50)
+        mock_enqueue_rel.assert_called_once_with(-50, 50)
