@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='mouse-anywhere',
-    version='0.1.2',
+    version='0.1.3',  # Updated version for clarity
     description='A Python package for smooth mouse movement using a C library.',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -17,7 +17,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     package_data={
-        'mouse_anywhere': ['mouse-anywhere.dll'],  # Ensure the DLL is included
+        'mouse_anywhere': ['mouse_anywhere2.dll'],  # Ensure the DLL is included with the correct name
     },
     classifiers=[
         'Programming Language :: Python :: 3',
@@ -25,10 +25,11 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries',
+        'Topic :: Software Development :: User Interfaces',
     ],
-    keywords='mouse automation cursor movement',
+    keywords='mouse automation cursor movement DLL',
     python_requires='>=3.6',
-    install_requires=[],
+    install_requires=[],  # Add dependencies if needed
     extras_require={
         'dev': [
             'pytest>=6.0.0',
@@ -41,10 +42,13 @@ setup(
         'pytest>=6.0.0',
     ],
     entry_points={
-        'console_scripts': [],
+        'console_scripts': [
+            # Example: 'mouse-anywhere-cli=mouse_anywhere.cli:main',
+        ],
     },
     project_urls={
         'Bug Reports': 'https://github.com/wuhplaptop/mouse-anywhere/issues',
         'Source': 'https://github.com/wuhplaptop/mouse-anywhere',
+        'Documentation': 'https://github.com/wuhplaptop/mouse-anywhere/wiki',
     },
 )
