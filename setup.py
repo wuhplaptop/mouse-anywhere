@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='mouse-anywhere',
-    version='0.1.1',
+    version='0.1.2',
     description='A Python package for smooth mouse movement using a C library.',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -29,9 +29,8 @@ setup(
     keywords='mouse automation cursor movement',
     python_requires='>=3.6',
     install_requires=[
-        # List any runtime dependencies here
-        # For example:
-        # 'numpy>=1.18.0',
+        # List runtime dependencies here
+        # Example: 'numpy>=1.18.0'
     ],
     extras_require={
         'dev': [
@@ -39,6 +38,16 @@ setup(
             'wheel',          # For building wheels
             'twine',          # For uploading to PyPI
         ],
+    },
+    test_suite='tests',  # Explicitly define the test directory
+    tests_require=[
+        'pytest>=6.0.0',  # Add pytest for testing
+    ],
+    entry_points={
+        'console_scripts': [
+            # Add any CLI tools your package might provide
+            # Example: 'mouse-anywhere-cli=mouse_anywhere.cli:main',
+        ]
     },
     project_urls={
         'Bug Reports': 'https://github.com/wuhplaptop/mouse-anywhere/issues',
