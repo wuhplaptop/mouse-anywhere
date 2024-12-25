@@ -90,8 +90,6 @@ jobs:
 
       - name: Run tests
         run: |
-          REM List build artifacts for debugging
-          dir dist\
           REM Install the built package
           for %%f in (dist\*.whl) do pip install %%f || exit 1
           REM Install testing dependencies
