@@ -36,7 +36,7 @@ setup(
             'twine',
         ],
     },
-    test_suite='tests',  # Explicitly define the test directory
+    test_suite='tests',
     tests_require=[
         'pytest>=6.0.0',
     ],
