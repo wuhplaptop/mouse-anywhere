@@ -96,8 +96,10 @@ jobs:
           for %%f in (dist\*.whl) do pip install %%f || exit 1
           REM Install testing dependencies
           pip install pytest
-          REM Ensure DLL is in correct test location
-          copy mouse_anywhere\mouse-anywhere.dll %PYTHONPATH%\Lib\site-packages\mouse_anywhere\
+          REM Copy DLL to test environment
+          set PYTHON_LIB_PATH=%PYTHONPATH%\Lib\site-packages\mouse_anywhere\
+          mkdir %PYTHON_LIB_PATH%
+          copy mouse_anywhere\mouse-anywhere.dll %PYTHON_LIB_PATH%
           REM Run tests
           pytest tests/
         shell: cmd
