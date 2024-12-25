@@ -13,41 +13,35 @@ setup(
     long_description_content_type="text/markdown",
     author='wuhp',
     author_email='wuhp@gmail.com',
-    url='https://github.com/wuhplaptop/mouse-anywhere',  # Replace with your repository URL
+    url='https://github.com/wuhplaptop/mouse-anywhere',
     packages=find_packages(),
     include_package_data=True,
     package_data={
-        'mouse_anywhere': ['mouse-anywhere.dll'],
+        'mouse_anywhere': ['mouse-anywhere.dll'],  # Ensure the DLL is included
     },
     classifiers=[
         'Programming Language :: Python :: 3',
         'Operating System :: Microsoft :: Windows',
-        'License :: OSI Approved :: MIT License',  # Adjust license as needed
+        'License :: OSI Approved :: MIT License',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries',
     ],
     keywords='mouse automation cursor movement',
     python_requires='>=3.6',
-    install_requires=[
-        # List runtime dependencies here
-        # Example: 'numpy>=1.18.0'
-    ],
+    install_requires=[],
     extras_require={
         'dev': [
-            'pytest>=6.0.0',  # For running tests
-            'wheel',          # For building wheels
-            'twine',          # For uploading to PyPI
+            'pytest>=6.0.0',
+            'wheel',
+            'twine',
         ],
     },
     test_suite='tests',  # Explicitly define the test directory
     tests_require=[
-        'pytest>=6.0.0',  # Add pytest for testing
+        'pytest>=6.0.0',
     ],
     entry_points={
-        'console_scripts': [
-            # Add any CLI tools your package might provide
-            # Example: 'mouse-anywhere-cli=mouse_anywhere.cli:main',
-        ]
+        'console_scripts': [],
     },
     project_urls={
         'Bug Reports': 'https://github.com/wuhplaptop/mouse-anywhere/issues',
