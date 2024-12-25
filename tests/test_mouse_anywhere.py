@@ -11,7 +11,7 @@ from mouse_anywhere import (
     perform_click,
 )
 
-# Ensure DLL path is correctly located
+# Dynamically resolve the DLL path
 dll_path = os.path.join(os.path.dirname(__file__), "..", "mouse_anywhere", "mouse-anywhere.dll")
 if not os.path.exists(dll_path):
     raise FileNotFoundError(f"Required DLL not found at {dll_path}")
