@@ -1,83 +1,51 @@
-import pytest
-import os
-from ctypes import WinDLL
-from mouse_anywhere import (
-    initialize,
-    shutdown,
-    set_cursor_abs,
-    set_cursor_rel,
-    enqueue_target_abs,
-    enqueue_target_rel,
-    perform_click,
-)
+import ctypes
+import time
 
-# Dynamically resolve the DLL path
-dll_path = os.path.join(os.path.dirname(__file__), "..", "mouse_anywhere", "mouse-anywhere.dll")
-if not os.path.exists(dll_path):
-    raise FileNotFoundError(f"Required DLL not found at {dll_path}")
+# Import the DLL functions via the package
+from mouse_anywhere import mouse_library
 
-# Load the DLL explicitly for the tests
-mouse_control = WinDLL(dll_path)
+def test_clicks():
+    print("Testing mouse clicks...")
 
-@pytest.fixture(scope="module", autouse=True)
-def setup_and_teardown():
-    """Setup and teardown for tests."""
-    initialize()
-    yield
-    shutdown()
+    # Left click
+    print("Performing Left click...")
+    mouse_library.click(1)
+    time.sleep(1)
 
-def test_initialize():
-    """Test initializing the DLL."""
+    # Right click
+    print("Performing Right click...")
+    mouse_library.click(2)
+    time.sleep(1)
+
+    # Middle click
+    print("Performing Middle click...")
+    mouse_library.click(3)
+    time.sleep(1)
+
+    print("Mouse click tests completed.")
+
+def test_movement_and_click():
+    print("Testing movement combined with mouse clicks...")
+    for x in range(100, 800, 200):
+        print(f"Moving to ({x}, 300) and performing left click...")
+        mouse_library.set_cursor_abs(x, 300)
+        mouse_library.click(1)
+        time.sleep(0.5)
+    print("Movement and click test completed.")
+
+def test_hold_and_move():
+    print("Testing hold and move...")
+    for x in range(100, 800, 200):
+        print(f"Holding click and moving to ({x}, 300)...")
+        mouse_library.hold_and_move(x, 300, 1, 1000)
+        time.sleep(0.5)
+    print("Hold and move test completed.")
+
+if __name__ == "__main__":
+    mouse_library.initialize()
     try:
-        mouse_control.initialize()
-        assert True
-    except Exception as e:
-        pytest.fail(f"Initialization failed: {e}")
-
-def test_set_cursor_abs():
-    """Test setting cursor to an absolute position."""
-    try:
-        mouse_control.set_cursor_abs(100, 100)
-        assert True
-    except Exception as e:
-        pytest.fail(f"set_cursor_abs failed: {e}")
-
-def test_set_cursor_rel():
-    """Test setting cursor to a relative position."""
-    try:
-        mouse_control.set_cursor_rel(10, 10)
-        assert True
-    except Exception as e:
-        pytest.fail(f"set_cursor_rel failed: {e}")
-
-def test_perform_click():
-    """Test performing a mouse click."""
-    try:
-        mouse_control.perform_click(1)  # Left click
-        assert True
-    except Exception as e:
-        pytest.fail(f"perform_click failed: {e}")
-
-def test_enqueue_target_abs():
-    """Test enqueueing an absolute target."""
-    try:
-        enqueue_target_abs(200, 200)
-        assert True
-    except Exception as e:
-        pytest.fail(f"enqueue_target_abs failed: {e}")
-
-def test_enqueue_target_rel():
-    """Test enqueueing a relative target."""
-    try:
-        enqueue_target_rel(20, 20)
-        assert True
-    except Exception as e:
-        pytest.fail(f"enqueue_target_rel failed: {e}")
-
-def test_shutdown():
-    """Test shutting down the DLL."""
-    try:
-        mouse_control.shutdown()
-        assert True
-    except Exception as e:
-        pytest.fail(f"Shutdown failed: {e}")
+        test_clicks()
+        test_movement_and_click()
+        test_hold_and_move()
+    finally:
+        mouse_library.mouse_shutdown()
