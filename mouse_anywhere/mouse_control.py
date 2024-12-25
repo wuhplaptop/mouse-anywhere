@@ -2,7 +2,9 @@ import ctypes
 import os
 
 # Get the path to the DLL
-DLL_PATH = os.path.join(os.path.dirname(__file__), "mouse_anywhere.dll")
+DLL_PATH = os.path.join(os.path.dirname(__file__), "mouse-anywhere.dll")
+if not os.path.exists(DLL_PATH):
+    raise FileNotFoundError(f"Required DLL not found at {DLL_PATH}")
 
 # Load the DLL
 mouse_anywhere = ctypes.WinDLL(DLL_PATH)
