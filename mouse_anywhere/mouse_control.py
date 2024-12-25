@@ -1,12 +1,8 @@
 import ctypes
 import os
 
-# Locate the DLL relative to the module
-DLL_PATH = os.path.join(os.path.dirname(__file__), "mouse-anywhere.dll")
-
-# Check if the DLL exists
-if not os.path.exists(DLL_PATH):
-    raise FileNotFoundError(f"mouse-anywhere.dll not found at {DLL_PATH}")
+# Get the path to the DLL
+DLL_PATH = os.path.join(os.path.dirname(__file__), "mouse_anywhere.dll")
 
 # Load the DLL
 mouse_anywhere = ctypes.WinDLL(DLL_PATH)
@@ -27,6 +23,12 @@ mouse_anywhere.set_cursor_rel.restype = None
 mouse_anywhere.perform_click.argtypes = [ctypes.c_int]
 mouse_anywhere.perform_click.restype = None
 
+mouse_anywhere.enqueue_target_abs.argtypes = [ctypes.c_int, ctypes.c_int]
+mouse_anywhere.enqueue_target_abs.restype = None
+
+mouse_anywhere.enqueue_target_rel.argtypes = [ctypes.c_int, ctypes.c_int]
+mouse_anywhere.enqueue_target_rel.restype = None
+
 # Initialize the DLL
 def initialize():
     mouse_anywhere.initialize()
@@ -46,3 +48,11 @@ def set_cursor_rel(delta_x, delta_y):
 # Perform a mouse click (1: Left, 2: Right, 3: Middle)
 def perform_click(button):
     mouse_anywhere.perform_click(button)
+
+# Enqueue an absolute movement target
+def enqueue_target_abs(x, y):
+    mouse_anywhere.enqueue_target_abs(x, y)
+
+# Enqueue a relative movement target
+def enqueue_target_rel(delta_x, delta_y):
+    mouse_anywhere.enqueue_target_rel(delta_x, delta_y)
