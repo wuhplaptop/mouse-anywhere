@@ -1,9 +1,23 @@
-from .mouse_control import (
+from .wrapper import (
     initialize,
     shutdown,
     set_cursor_abs,
-    set_cursor_rel,
-    enqueue_target_abs,
-    enqueue_target_rel,
-    perform_click,
+    click,
+    hold_and_move,
+    set_mouse_speed,
+    set_config,
+    apply_preset,
+    set_logging_level,
 )
+
+__all__ = [
+    "initialize",
+    "shutdown",
+    "set_cursor_abs",
+    "click",
+    "hold_and_move",
+    "set_mouse_speed",
+    "set_config",
+    "apply_preset",
+    "set_logging_level",
+]
