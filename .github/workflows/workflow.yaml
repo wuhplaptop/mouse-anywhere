@@ -25,7 +25,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'  # Specify the Python version you need
+          python-version: '3.9'
 
       - name: Install Python dependencies
         run: |
@@ -36,31 +36,7 @@ jobs:
         run: |
           if exist build rmdir /s /q build
           if exist dist rmdir /s /q dist
-          if exist mouse_anywhere.egg-info rmdir /s /q mouse_anywhere.egg-info
-        shell: cmd
-
-      - name: Setup MSVC environment and compile C code
-        shell: cmd
-        run: |
-          "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vcpath.txt
-          set /p vcpath=<vcpath.txt
-          call "%vcpath%\VC\Auxiliary\Build\vcvarsall.bat" x64
-          cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll user32.lib
-
-      - name: Verify DLL creation
-        shell: cmd
-        run: |
-          if not exist mouse-anywhere.dll (
-            echo "DLL was not created."
-            exit 1
-          )
-          echo "DLL successfully created."
-          dir mouse-anywhere.dll
-
-      - name: Copy DLL to Python package
-        run: |
-          mkdir mouse_anywhere
-          copy mouse-anywhere.dll mouse_anywhere\
+          if exist yolo_overlay.egg-info rmdir /s /q yolo_overlay.egg-info
         shell: cmd
 
       - name: Build Python package
