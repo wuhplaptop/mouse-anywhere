@@ -63,6 +63,15 @@ jobs:
           copy mouse-anywhere.dll mouse_anywhere\
         shell: cmd
 
+      - name: Verify DLL placement for tests
+        run: |
+          if not exist mouse_anywhere\mouse-anywhere.dll (
+            echo "DLL missing in package directory."
+            exit 1
+          )
+          echo "DLL successfully placed for tests."
+        shell: cmd
+
       - name: Build Python package
         run: |
           python setup.py sdist bdist_wheel
@@ -87,6 +96,8 @@ jobs:
           for %%f in (dist\*.whl) do pip install %%f || exit 1
           REM Install testing dependencies
           pip install pytest
+          REM Ensure DLL is in correct test location
+          copy mouse_anywhere\mouse-anywhere.dll %PYTHONPATH%\Lib\site-packages\mouse_anywhere\
           REM Run tests
           pytest tests/
         shell: cmd
