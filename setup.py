@@ -17,7 +17,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     package_data={
-        'mouse_anywhere': ['mouse_anywhere2.dll'],  # Ensure the DLL is included with the correct name
+        'mouse_anywhere': ['mouse-anywhere.dll'],  # Ensure the DLL is included with the correct name
     },
     classifiers=[
         'Programming Language :: Python :: 3',
