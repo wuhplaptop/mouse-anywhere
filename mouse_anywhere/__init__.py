@@ -1,6 +1,6 @@
 from .wrapper import (
     initialize,
-    shutdown,
+    mouse_shutdown,
     set_cursor_abs,
     click,
     hold_and_move,
@@ -12,7 +12,7 @@ from .wrapper import (
 
 __all__ = [
     "initialize",
-    "shutdown",
+    "mouse_shutdown",
     "set_cursor_abs",
     "click",
     "hold_and_move",
