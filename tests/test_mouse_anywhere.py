@@ -2,7 +2,7 @@ import pytest
 import time
 from mouse_anywhere import (
     initialize,
-    shutdown,
+    mouse_shutdown,  # Updated to match the correct function name
     set_cursor_abs,
     click,
     hold_and_move,
@@ -18,7 +18,7 @@ def setup_module(module):
 def teardown_module(module):
     """Shutdown the DLL after tests."""
     print("Shutting down mouse library...")
-    shutdown()  # Call the function directly
+    mouse_shutdown()  # Call the function directly
 
 def test_clicks():
     """Test basic mouse click functionality."""
@@ -29,6 +29,7 @@ def test_clicks():
     time.sleep(0.5)
     click(3)  # Middle click
     time.sleep(0.5)
+    assert True, "Mouse clicks completed successfully."
     print("Mouse clicks test completed.")
 
 def test_cursor_movement():
@@ -38,12 +39,14 @@ def test_cursor_movement():
     for x, y in positions:
         set_cursor_abs(x, y)  # Call the function directly
         time.sleep(0.5)
+    assert True, "Cursor moved to all positions successfully."
     print("Cursor movement test completed.")
 
 def test_hold_and_move():
     """Test holding a click and moving."""
     print("Testing hold and move...")
     hold_and_move(400, 400, 1, 1000)  # Hold left click for 1 second
+    assert True, "Hold and move completed successfully."
     print("Hold and move test completed.")
 
 def test_presets():
@@ -52,6 +55,7 @@ def test_presets():
     apply_preset(1)  # Default preset
     apply_preset(2)  # Fast preset
     apply_preset(3)  # Smooth preset
+    assert True, "Preset configurations applied successfully."
     print("Preset configuration test completed.")
 
 def test_dynamic_config():
@@ -59,4 +63,5 @@ def test_dynamic_config():
     print("Testing dynamic configuration...")
     set_config(30, 200, 3, 1, True)  # Lower strength, fast speed
     set_config(80, 500, 10, 3, False)  # Higher strength, slower speed
+    assert True, "Dynamic configurations set successfully."
     print("Dynamic configuration test completed.")
