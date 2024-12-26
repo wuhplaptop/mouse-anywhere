@@ -85,10 +85,16 @@ jobs:
           pytest tests/
         shell: cmd
 
+      - name: Debug event details
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Event action: ${{ github.event.action }}"
+
       - name: Publish to PyPI with Twine
-        if: |
-          github.event_name == 'release' && github.event.action == 'published' ||
-          github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        if: > 
+          github.event_name == 'release' && github.event.action == 'published' || 
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
         run: |
           python -m pip install twine
           python -m twine upload dist/* --verbose
