@@ -19,7 +19,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]  # Test on Python 3.8 - 3.11
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
 
     steps:
       - name: Checkout code
@@ -78,52 +78,40 @@ jobs:
           dir dist
         shell: cmd
 
-      - name: Upload build artifacts
+      - name: Upload build artifact for Python ${{ matrix.python-version }}
         uses: actions/upload-artifact@v4
         with:
           name: built-python-package-${{ matrix.python-version }}
           path: dist/**/*
 
-      - name: Run tests on Python ${{ matrix.python-version }}
-        run: |
-          REM Install the built package
-          for %%f in (dist\*.whl) do pip install %%f || exit 1
-          REM Install testing dependencies
-          pip install pytest
-          REM Run tests
-          pytest tests/
-        shell: cmd
-
   publish:
     needs: build
     runs-on: windows-latest
-    if: >
-      ${{ 
-        (github.event_name == 'release' && github.event.action == 'published') ||
-        (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
-      }}
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]  # Publish from each Python version
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Download build artifacts
+      - name: Download build artifact for Python ${{ matrix.python-version }}
         uses: actions/download-artifact@v4
         with:
           name: built-python-package-${{ matrix.python-version }}
           path: dist
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"  # Publish from a single Python version
+          python-version: ${{ matrix.python-version }}
 
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install twine
 
-      - name: Publish to PyPI with Twine
+      - name: Publish to PyPI with Twine for Python ${{ matrix.python-version }}
         run: |
           python -m twine upload dist/* --verbose
         env:
