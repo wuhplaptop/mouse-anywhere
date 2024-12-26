@@ -17,15 +17,26 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]  # Test on Python 3.8 - 3.11
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ matrix.python-version }}-
 
       - name: Install Python dependencies
         run: |
@@ -70,10 +81,10 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: built-python-package
+          name: built-python-package-${{ matrix.python-version }}
           path: dist/**/*
 
-      - name: Run tests
+      - name: Run tests on Python ${{ matrix.python-version }}
         run: |
           REM Install the built package
           for %%f in (dist\*.whl) do pip install %%f || exit 1
@@ -99,13 +110,13 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: built-python-package
+          name: built-python-package-${{ matrix.python-version }}
           path: dist
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: "3.9"  # Publish from a single Python version
 
       - name: Install Python dependencies
         run: |
