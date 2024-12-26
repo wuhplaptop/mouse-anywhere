@@ -6,7 +6,7 @@ on:
       - main
       - master
     tags:
-      - 'v*.*.*'  # Trigger on tag pushes like v1.0.0
+      - 'v*.*.*'
   pull_request:
     branches:
       - main
@@ -45,27 +45,27 @@ jobs:
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vcpath.txt
           set /p vcpath=<vcpath.txt
           call "%vcpath%\VC\Auxiliary\Build\vcvarsall.bat" x64
-          cl /LD mouse-anywhere.c /Fe:mouse-anywhere.dll user32.lib
+          cl /LD mouse-anywhere.c /Fe:mouse_anywhere2.dll user32.lib
 
       - name: Verify DLL creation
         shell: cmd
         run: |
-          if not exist mouse-anywhere.dll (
+          if not exist mouse_anywhere2.dll (
             echo "DLL was not created."
             exit 1
           )
           echo "DLL successfully created."
-          dir mouse-anywhere.dll
+          dir mouse_anywhere2.dll
 
       - name: Copy DLL to Python package
         run: |
           mkdir mouse_anywhere
-          copy mouse-anywhere.dll mouse_anywhere\
+          copy mouse_anywhere2.dll mouse_anywhere\
         shell: cmd
 
       - name: Verify DLL placement for tests
         run: |
-          if not exist mouse_anywhere\mouse-anywhere.dll (
+          if not exist mouse_anywhere\mouse_anywhere2.dll (
             echo "DLL missing in package directory."
             exit 1
           )
@@ -97,7 +97,7 @@ jobs:
           REM Copy DLL to test environment
           set PYTHON_LIB_PATH=%PYTHONPATH%\Lib\site-packages\mouse_anywhere\
           mkdir %PYTHON_LIB_PATH%
-          copy mouse_anywhere\mouse-anywhere.dll %PYTHON_LIB_PATH%
+          copy mouse_anywhere\mouse_anywhere2.dll %PYTHON_LIB_PATH%
           REM Run tests
           pytest tests/
         shell: cmd
