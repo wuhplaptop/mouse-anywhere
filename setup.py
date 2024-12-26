@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='mouse-anywhere',
-    version='0.1.4',  # Updated version for clarity
+    version='0.1.3',  # Updated version for clarity
     description='A Python package for smooth mouse movement using a C library.',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -17,7 +17,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     package_data={
-        'mouse_anywhere': ['mouse_anywhere.dll'],  # Ensure the DLL is included with the correct name
+        'mouse_anywhere': ['mouse_anywhere2.dll'],  # Corrected DLL filename
     },
     classifiers=[
         'Programming Language :: Python :: 3',
