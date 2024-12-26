@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="mouse-anywhere",
-    version="0.2.5",  # Incremented version for updates
+    version="0.2.6",  # Incremented version for updates
     description="A Python package for smooth mouse movement using a C library.",
     long_description=long_description,
     long_description_content_type="text/markdown",
