@@ -1,5 +1,4 @@
 
-
 Mouse Anywhere Library
 =
 
@@ -129,6 +128,22 @@ If you encounter issues:
 1. Verify the DLL is present in the installed package directory.
 2. Confirm your system is running a compatible version of Windows.
 
+### DLL Methods
+Below are the exported methods from the DLL:
+
+- **initialize():** Initializes the mouse library.
+- **mouse_shutdown():** Shuts down the library and cleans up resources.
+- **set_cursor_abs(x, y):** Moves the cursor to absolute screen coordinates.
+- **click(button):** Simulates a mouse click. Acceptable values for `button`:
+    - 1: Left click
+    - 2: Right click
+    - 3: Middle click
+- **hold_and_move(x, y, button, duration_ms):** Holds the specified button and moves the cursor to the specified coordinates over the given duration.
+- **set_mouse_speed(speed):** Sets the speed for cursor movement. Speed must be greater than 0.
+- **set_config(strength, hold_time_ms, mouse_speed, easing_type, smooth_movement):** Dynamically updates the library configuration with detailed parameters.
+- **apply_preset(preset_type):** Applies predefined configurations (1: Default, 2: Fast, 3: Smooth).
+- **set_logging_level(level):** Adjusts the logging verbosity (0: None, 1: Error, 2: Info, 3: Debug).
+
 ====================================
 
 Troubleshooting
@@ -140,5 +155,5 @@ Troubleshooting
 ### Debugging Steps
 1. Enable debug logging with `set_logging_level(3)`.
 2. Check the log file (`mouse_movement.log`) for detailed information.
-
+3. Use the `initialize()` method to verify proper setup.
 
