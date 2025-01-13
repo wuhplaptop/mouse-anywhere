@@ -36,30 +36,13 @@ jobs:
         run: |
           if exist build rmdir /s /q build
           if exist dist rmdir /s /q dist
-          if exist mouse_anywhere.egg-info rmdir /s /q mouse_anywhere.egg-info
+          if exist face_rec.egg-info rmdir /s /q face_rec.egg-info
         shell: cmd
-
-      - name: Setup MSVC environment and compile C code
-        shell: cmd
-        run: |
-          "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vcpath.txt
-          set /p vcpath=<vcpath.txt
-          call "%vcpath%\VC\Auxiliary\Build\vcvarsall.bat" x64
-          cl /LD mouse-anywhere.c /Fe:mouse_anywhere2.dll user32.lib
-
-      - name: Verify DLL creation
-        shell: cmd
-        run: |
-          if not exist mouse_anywhere2.dll (
-            echo "DLL was not created."
-            exit 1
-          )
-          echo "DLL successfully created."
-          dir mouse_anywhere2.dll
 
       - name: Build Python package
         run: |
           python setup.py sdist bdist_wheel
+        shell: cmd
 
       - name: Verify dist contents
         run: |
@@ -81,7 +64,7 @@ jobs:
           for %%f in (dist\*.whl) do pip install %%f || exit 1
           REM Install testing dependencies
           pip install pytest
-          REM Run tests
+          REM Run tests (make sure you have a tests/ folder!)
           pytest tests/
         shell: cmd
 
@@ -118,5 +101,6 @@ jobs:
         run: |
           python -m twine upload dist/* --verbose
         env:
+          # If using an API token:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
